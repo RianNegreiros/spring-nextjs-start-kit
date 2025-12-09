@@ -29,6 +29,7 @@ export default function Navigation() {
 
         if (response.ok) {
           const data = await response.json();
+          console.log(response);
           setIsLoggedIn(true);
           const normalizedData: UserData = {
             email: data.email,
@@ -41,14 +42,16 @@ export default function Navigation() {
           setUser(null);
         }
       } catch (err) {
-        console.error("Auth check failed:", err);
+        console.log(err);
         setIsLoggedIn(false);
         setUser(null);
       }
     };
 
     checkAuth();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleLogout = async () => {

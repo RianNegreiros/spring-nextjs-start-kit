@@ -23,18 +23,22 @@ export default function ProfileCard() {
           credentials: "include",
         });
         if (response.ok) {
-          const data = await response.json();
-          const normalizedData: UserData = {
-            email: data.email,
-            name: data.name,
-            avatar_url: data.avatar_url || data.picture || "",
-          };
-          setUser(normalizedData);
+          try {
+            const data = await response.json();
+            const normalizedData: UserData = {
+              email: data.email,
+              name: data.name,
+              avatar_url: data.avatar_url || data.picture || "",
+            };
+            setUser(normalizedData);
+            console.log(data);
+          } catch {
+            router.push("/login");
+          }
         } else {
           router.push("/login");
         }
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
+      } catch {
         router.push("/login");
       } finally {
         setIsLoading(false);
