@@ -3,7 +3,6 @@
 @password=password123
 
 ### Register a new user
-# @name register
 POST {{baseURL}}/auth/register
 Content-Type: application/json
 
@@ -23,7 +22,7 @@ Content-Type: application/json
   "password": "{{password}}"
 }
 
-### Get JWT user data token
+### Get current user data
 GET {{baseURL}}/auth/current
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInN1YiI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwiZXhwIjoxNzY1NDU4MjIyLCJpYXQiOjE3NjUzNzE4MjJ9.UMj6k3t9yiENqJ983oRbnAQ5KDj3LYLFajcIyZ4YdYk
+Authorization: Bearer {{login.response.body.data.token}}
 Accept: application/json
