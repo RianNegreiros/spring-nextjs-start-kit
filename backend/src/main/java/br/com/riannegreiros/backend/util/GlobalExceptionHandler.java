@@ -7,66 +7,135 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+
+import br.com.riannegreiros.backend.util.exceptions.ApiException;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiResponse<Void>> handleApiException(ApiException ex, WebRequest request) {
+        log.warn("API Exception: {}", ex.getMessage());
+
+        return ResponseEntity.status(ex.getStatus())
+                .body(new ApiResponse<>(
+                        LocalDateTime.now(),
+                        false,
+                        ex.getMessage(),
+                        null,
+                        null));
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex, WebRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(
+            BadCredentialsException ex, WebRequest request) {
+
         log.warn("Authentication failed - bad credentials");
+
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Unauthorized", "Invalid email or password"));
+                .body(new ApiResponse<>(
+                        LocalDateTime.now(),
+                        false,
+                        "Invalid email or password",
+                        null,
+                        null));
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUsernameNotFound(UsernameNotFoundException ex, WebRequest request) {
-        log.warn("Authentication failed - user not found");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Unauthorized", "Invalid email or password"));
-    }
+    public ResponseEntity<ApiResponse<Void>> handleUsernameNotFound(
+            UsernameNotFoundException ex, WebRequest request) {
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
-        log.warn("Access denied - insufficient permissions");
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ErrorResponse("Forbidden", "You do not have permission to access this resource"));
+        log.warn("Authentication failed - user not found");
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse<>(
+                        LocalDateTime.now(),
+                        false,
+                        "Invalid email or password",
+                        null,
+                        null));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex,
-            WebRequest request) {
-        String message = ex.getBindingResult()
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationException(
+            MethodArgumentNotValidException ex, WebRequest request) {
+
+        Map<String, String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .findFirst()
-                .orElse("Validation failed");
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value"));
+
+        String message = errors.entrySet().stream()
+                .map(entry -> entry.getKey() + ": " + entry.getValue())
+                .collect(Collectors.joining(", "));
 
         log.warn("Validation error: {}", message);
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("Bad Request", message));
+                .body(new ApiResponse<>(
+                        LocalDateTime.now(),
+                        false,
+                        "Validation failed",
+                        null,
+                        errors));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(
+            AccessDeniedException ex, WebRequest request) {
+
+        log.warn("Access denied - insufficient permissions");
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiResponse<>(
+                        LocalDateTime.now(),
+                        false,
+                        "You do not have permission to access this resource",
+                        null,
+                        null));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(
+            IllegalArgumentException ex, WebRequest request) {
+
         log.warn("Invalid argument: {}", ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("Bad Request", ex.getMessage()));
+                .body(new ApiResponse<>(
+                        LocalDateTime.now(),
+                        false,
+                        ex.getMessage(),
+                        null,
+                        null));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(
+            Exception ex, WebRequest request) {
+
         String requestUri = request.getDescription(false).replace("uri=", "");
         log.error("Unhandled exception occurred - URI: {}, Message: {}", requestUri, ex.getMessage(), ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("Internal Server Error",
-                        "An unexpected error occurred. Please try again later"));
+                .body(new ApiResponse<>(
+                        LocalDateTime.now(),
+                        false,
+                        "An unexpected error occurred. Please try again later",
+                        null,
+                        null));
     }
 }

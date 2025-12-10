@@ -11,4 +11,6 @@ import br.com.riannegreiros.backend.users.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<UserDetails> findByEmail(String email);
+
+    boolean existsByEmail(String email);
 }

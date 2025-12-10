@@ -1,0 +1,29 @@
+@baseURL=http://localhost:8080/api
+@email=john.doe@example.com
+@password=password123
+
+### Register a new user
+# @name register
+POST {{baseURL}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Login user
+# @name login
+POST {{baseURL}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Get JWT user data token
+GET {{baseURL}}/auth/current
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInN1YiI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwiZXhwIjoxNzY1NDU4MjIyLCJpYXQiOjE3NjUzNzE4MjJ9.UMj6k3t9yiENqJ983oRbnAQ5KDj3LYLFajcIyZ4YdYk
+Accept: application/json
