@@ -32,21 +32,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-        logger.debug("Processing request: {}", request.getRequestURI());
+
+        logger.debug("JWT Filter - Processing: {} {}", request.getMethod(), request.getRequestURI());
+
         String authHeader = request.getHeader("Authorization");
+
         if (Strings.isNotEmpty(authHeader) && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring("Bearer ".length());
+
             Optional<JWTUserData> userData = tokenConfig.validateToken(token);
+
             if (userData.isPresent()) {
                 JWTUserData user = userData.get();
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userData, null);
+                logger.info("User authenticated: {} (ID: {})", user.email(), user.userId());
+
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user,
+                        null, null);
+
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                logger.debug("User authenticated: {}", user.email());
+
+            } else {
+                logger.warn("Token validation failed");
             }
-            filterChain.doFilter(request, response);
-        } else {
-            filterChain.doFilter(request, response);
         }
+
+        filterChain.doFilter(request, response);
     }
 }

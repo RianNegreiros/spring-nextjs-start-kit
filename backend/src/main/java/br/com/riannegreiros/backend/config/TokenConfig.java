@@ -12,14 +12,17 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-import br.com.riannegreiros.backend.entity.User;
+import br.com.riannegreiros.backend.users.User;
 
 @Component
 public class TokenConfig {
 
     private static final Logger log = LoggerFactory.getLogger(TokenConfig.class);
 
-    private final String secretKey = "test_secret_key"; // TODO: Use environment variable in production
+    private final String secretKey = "my_very_secure_secret_key_that_is_long_enough_for_hmac256"; // TODO: Use
+                                                                                                  // environment
+                                                                                                  // variable in
+                                                                                                  // production
 
     public String generateToken(User user) {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
