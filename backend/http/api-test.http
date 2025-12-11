@@ -26,3 +26,21 @@ Content-Type: application/json
 GET {{baseURL}}/auth/current
 Authorization: Bearer {{login.response.body.data.token}}
 Accept: application/json
+
+### Upload avatar (Method 1: Reference file)
+POST {{baseURL}}/avatar
+Authorization: Bearer {{login.response.body.data.token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="avatar.png"
+Content-Type: image/png
+
+< ./avatar.png
+--boundary--
+
+### Delete avatar
+DELETE {{baseURL}}/avatar
+Authorization: Bearer {{login.response.body.data.token}}
+Accept: application/json
+

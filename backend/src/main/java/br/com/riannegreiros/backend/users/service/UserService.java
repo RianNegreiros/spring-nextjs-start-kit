@@ -60,19 +60,45 @@ public class UserService {
         Object principal = auth.getPrincipal();
 
         if (principal instanceof JWTUserData userData) {
-            return Optional.of(new UserResponse(
-                    userData.userId(),
-                    userData.email(),
-                    userData.name()));
+            User user = userRepository.findById(userData.userId()).orElse(null);
+            if (user != null) {
+                return Optional.of(new UserResponse(
+                        userData.userId().toString(),
+                        userData.email(),
+                        userData.name(),
+                        user.getAvatarUrl()));
+            }
         }
 
         if (principal instanceof User user) {
             return Optional.of(new UserResponse(
-                    user.getId(),
+                    user.getId().toString(),
                     user.getEmail(),
-                    user.getName()));
+                    user.getName(),
+                    user.getAvatarUrl()));
         }
 
         return Optional.empty();
+    }
+
+    public User getCurrentUserEntity() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+
+        Object principal = auth.getPrincipal();
+
+        if (principal instanceof JWTUserData userData) {
+            return userRepository.findById(userData.userId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        }
+
+        if (principal instanceof User user) {
+            return user;
+        }
+
+        throw new RuntimeException("Invalid authentication principal");
     }
 }
